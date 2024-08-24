@@ -1,0 +1,21 @@
+{
+    "C_Cpp.errorSquiggles": "enabled",
+    "files.associations": {
+        "wasm_simd128.h": "c",
+        "hash_map": "c",
+        "bitset": "c",
+        "algorithm": "c",
+        "format": "c",
+        "stdint.h": "c",
+        "jpeglib.h": "c",
+        "stdio.h": "c",
+        "emscripten.h": "c",
+        "em_js.h": "c",
+        "x264.h": "c",
+        "array": "c",
+        "string_view": "c",
+        "initializer_list": "c",
+        "ranges": "c",
+        "span": "c"
+    }
+}

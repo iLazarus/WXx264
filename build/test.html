@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>WASM Encoder Example</title>
+</head>
+
+<body>
+    <script>
+        // 启用 SharedArrayBuffer 支持
+        console.log('run wasm');
+        // 加载 WebAssembly 模块
+        var Module = {
+            onRuntimeInitialized: function () {
+                var create = Module._create;
+                var encoder = Module._encoder;
+                var destroy = Module._destroy;
+                var malloc = Module._malloc;
+                var free = Module._free;
+                var u8 = Module.HEAPU8;
+                var i32 = Module.HEAP32;
+
+
+                create(480,640);
+                var in_frame_size = 480 * 640 * 4;
+                var total_size = 0;
+                fetch('data.rgba')
+                    .then(response => response.arrayBuffer())
+                    .then(buffer => {
+
+                        console.log("原始文件大小", buffer.byteLength);
+                        const count = buffer.byteLength / in_frame_size;
+                        var tmp = new Uint8Array(count * 460800);
+                        for (let index = 0; index < count; index++) {
+                            var data = new Uint8Array(buffer.slice(index * in_frame_size, (index + 1) * in_frame_size));
+                            var data_in_ptr = malloc(in_frame_size);
+                            u8.set(data, data_in_ptr);
+                            var data_out_size = malloc(4);
+                            var data_out_ptr = malloc(102400);
+                            // 统计每次调用时间
+                            console.time('encoder');
+                            var ret = encoder(data_in_ptr, index, data_out_ptr, data_out_size);
+                            console.timeEnd('encoder');
+
+                            var read_size = new Int32Array(i32.buffer, data_out_size, 1)[0];
+                            var result = new Uint8Array(u8.buffer, data_out_ptr, read_size);
+                            // console.log(result);
+                            
+                            tmp.set(result, total_size);
+                            total_size += read_size;
+
+
+                            free(data_in_ptr)
+                            free(data_out_ptr)
+                            free(data_out_size)
+                        }
+                        if (true) {
+                            const blob = new Blob([tmp.buffer.slice(0, total_size)], { type: 'application/octet-stream' });
+                            const a = document.createElement('a');
+                            a.href = URL.createObjectURL(blob);
+                            a.download = 'output.h264';
+                            // 触发下载
+                            a.click();
+                            // 释放 URL 对象
+                            URL.revokeObjectURL(a.href);
+                        }
+                    }).finally(() => {
+                        // 释放资源
+                        destroy();
+                    });
+            }
+        };  
+    </script>
+    <script src="h264.js"></script>
+</body>
+
+</html>
